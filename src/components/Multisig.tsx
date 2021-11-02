@@ -41,6 +41,7 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
+import * as serumCmn from '@project-serum/common';
 import BN from "bn.js";
 import {
   Account,
@@ -51,7 +52,8 @@ import {
 import { ViewTransactionOnExplorerButton } from "./Notification";
 import * as idl from "../utils/idl";
 import { useMultisigProgram } from "../hooks/useMultisigProgram";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
+import { MoneyOffOutlined, MoneyOutlined, MoneyRounded } from "@material-ui/icons";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
@@ -756,6 +758,11 @@ function AddTransactionDialog({
             multisig={multisig}
             onClose={onClose}
           />
+          <TransferTokenListItem
+            didAddTransaction={didAddTransaction}
+            multisig={multisig}
+            onClose={onClose}
+          />
         </List>
       </DialogContent>
     </Dialog>
@@ -1313,6 +1320,152 @@ function UpgradeProgramListItemDetails({
       >
         <Button onClick={() => createTransactionAccount()}>
           Create upgrade
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function TransferTokenListItem({
+  multisig,
+  onClose,
+  didAddTransaction,
+}: {
+  multisig: PublicKey;
+  onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <ListItem button onClick={() => setOpen((open) => !open)}>
+        <ListItemIcon>
+          <MoneyRounded />
+        </ListItemIcon>
+        <ListItemText primary={"Transfer Token"} />
+        {open ? <ExpandLess /> : <ExpandMore />}
+      </ListItem>
+      <Collapse in={open} timeout="auto" unmountOnExit>
+        <TransferTokenListItemDetails
+          didAddTransaction={didAddTransaction}
+          multisig={multisig}
+          onClose={onClose}
+        />
+      </Collapse>
+    </>
+  );
+}
+
+function TransferTokenListItemDetails({
+  multisig,
+  onClose,
+  didAddTransaction,
+}: {
+  multisig: PublicKey;
+  onClose: Function;
+  didAddTransaction: (tx: PublicKey) => void;
+}) {
+  const [source, setSource] = useState<null | string>(null);
+  const [destination, setDestination] = useState<null | string>(null);
+  const [amount, setAmount] = useState<null | u64>(null);
+
+  const multisigClient = useMultisigProgram();
+  const { enqueueSnackbar } = useSnackbar();
+  const createTransactionAccount = async () => {
+    enqueueSnackbar("Creating transaction", {
+      variant: "info",
+    });
+    const sourceAddr = new PublicKey(source as string);
+    const [multisigSigner] = await PublicKey.findProgramAddress(
+      [multisig.toBuffer()],
+      multisigClient.programId
+    );
+
+    const destinationAddr = new PublicKey(destination as string);
+
+    if (!amount) {
+      enqueueSnackbar("No amount provided", {
+        variant: "warning",
+      });
+      return
+    }
+    const transferIx = Token.createTransferInstruction(
+      TOKEN_PROGRAM_ID,
+      sourceAddr,
+      destinationAddr,
+      multisigSigner,
+      [],
+      amount
+    );
+    const transaction = new Account();
+    const tx = await multisigClient.rpc.createTransaction(
+      TOKEN_PROGRAM_ID,
+      transferIx.keys,
+      Buffer.from(transferIx.data),
+      {
+        accounts: {
+          multisig,
+          transaction: transaction.publicKey,
+          proposer: multisigClient.provider.wallet.publicKey,
+          rent: SYSVAR_RENT_PUBKEY,
+        },
+        signers: [transaction],
+        instructions: [
+          await multisigClient.account.transaction.createInstruction(
+            transaction,
+            // @ts-ignore
+            1000
+          ),
+        ],
+      }
+    );
+    enqueueSnackbar("Transaction created", {
+      variant: "success",
+      action: <ViewTransactionOnExplorerButton signature={tx} />,
+    });
+    didAddTransaction(transaction.publicKey);
+    onClose();
+  };
+
+  return (
+    <div
+      style={{
+        background: "#f1f0f0",
+        paddingLeft: "24px",
+        paddingRight: "24px",
+      }}
+    >
+      <TextField
+        fullWidth
+        style={{ marginTop: "16px" }}
+        label="Source Token Account"
+        value={source}
+        onChange={(e) => setSource(e.target.value as string)}
+      />
+      <TextField
+        style={{ marginTop: "16px" }}
+        fullWidth
+        label="Amount"
+        value={amount}
+        onChange={(e) => setAmount(new u64(e.target.value as string))}
+      />
+      <TextField
+        style={{ marginTop: "16px" }}
+        fullWidth
+        label="Destination Address"
+        value={destination}
+        onChange={(e) => setDestination(e.target.value as string)}
+      />
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          marginTop: "16px",
+          paddingBottom: "16px",
+        }}
+      >
+        <Button onClick={() => createTransactionAccount()}>
+          Create Token Transfer
         </Button>
       </div>
     </div>
