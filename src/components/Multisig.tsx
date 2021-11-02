@@ -1380,7 +1380,14 @@ function TransferTokenListItemDetails({
       [multisig.toBuffer()],
       multisigClient.programId
     );
-
+    const sourceTokenAccount = await serumCmn.getTokenAccount(
+      multisigClient.provider,
+      sourceAddr,
+    );
+    const tokenMint = await serumCmn.getMintInfo(
+      multisigClient.provider,
+      sourceTokenAccount.mint,
+    );
     const destinationAddr = new PublicKey(destination as string);
 
     if (!amount) {
@@ -1389,13 +1396,16 @@ function TransferTokenListItemDetails({
       });
       return
     }
+    const TEN = new u64(10);
+    const multiplier = TEN.pow(new BN(tokenMint.decimals));
+    const amountInLamports = amount.mul(multiplier);
     const transferIx = Token.createTransferInstruction(
       TOKEN_PROGRAM_ID,
       sourceAddr,
       destinationAddr,
       multisigSigner,
       [],
-      amount
+      new u64(amountInLamports.toString())
     );
     const transaction = new Account();
     const tx = await multisigClient.rpc.createTransaction(
