@@ -629,6 +629,42 @@ function ixLabel(tx: any, multisigClient: any) {
       );
     }
   }
+  if (tx.account.programId.equals(TOKEN_PROGRAM_ID)) {
+    const tag = tx.account.data.slice(0, 1);
+
+    if (Buffer.from([3]).equals(tag)) {
+      return (
+        <ListItemText
+          primary="Transfer Token"
+          secondary={tx.publicKey.toString()}
+        />
+      );
+    }
+
+    if (Buffer.from([4]).equals(tag)) {
+      return (
+        <ListItemText
+          primary="Approve Token"
+          secondary={tx.publicKey.toString()}
+        />
+      );
+    }
+
+    if (Buffer.from([7]).equals(tag)) {
+      return (
+        <ListItemText
+          primary="Mint Token To"
+          secondary={tx.publicKey.toString()}
+        />
+      );
+    }
+    return (
+      <ListItemText
+        primary="Token Instructions"
+        secondary={tx.publicKey.toString()}
+      />
+    );
+  }
   if (idl.IDL_TAG.equals(tx.account.data.slice(0, 8))) {
     return (
       <ListItemText primary="Upgrade IDL" secondary={tx.publicKey.toString()} />
