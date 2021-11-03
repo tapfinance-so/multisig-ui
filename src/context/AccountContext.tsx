@@ -9,6 +9,7 @@ import { TokenAccountContext } from '../models/TokenAccountContext';
 import { useProgramSubscription } from '../hooks/useProgramSubscription';
 import { useMultisigProgram } from '../hooks/useMultisigProgram';
 import { KeyedAccountInfo } from '@solana/web3.js';
+import { parseTokenAccount } from '@project-serum/common';
 
 function getProgramId(_provider: Provider): PublicKey {
   return TOKEN_PROGRAM_ID;
@@ -28,8 +29,10 @@ function getFilters(provider: Provider): GetProgramAccountsFilter[] {
   ];
 }
 
-function parseTokenAccount(raw: KeyedAccountInfo): AccountInfo {
-  return AccountLayout.decode(raw.accountInfo.data) as AccountInfo;
+function parse(raw: KeyedAccountInfo): AccountInfo {
+  const res = parseTokenAccount(raw.accountInfo.data);
+  res.address = raw.accountId;
+  return res;
 }
 
 interface Interface {
@@ -47,7 +50,7 @@ export function AccountProvider({ children = null as any }) {
     useProgramSubscription<AccountInfo>(
       getProgramId,
       getFilters,
-      parseTokenAccount,
+      parse,
       multisigProgram.provider
     );
 

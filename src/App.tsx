@@ -21,6 +21,7 @@ import {
 } from '@solana/wallet-adapter-wallets';
 import { ConnectionProvider } from "./context/connection";
 import './App.css'
+import { AccountProvider } from "./context/AccountContext";
 
 function App() {
   const theme = createMuiTheme({
@@ -58,16 +59,18 @@ function App() {
         <ConnectionProvider>
           <WalletProvider wallets={wallets} autoConnect>
               <WalletDialogProvider>
-                <HashRouter basename={"/"}>
-                      <Layout>
-                        <Route exact path="/" component={MultisigPage} />
-                        <Route
-                          exact
-                          path="/:address"
-                          component={MultisigInstancePage}
-                        />
-                      </Layout>
-                </HashRouter>
+                <AccountProvider>
+                  <HashRouter basename={"/"}>
+                        <Layout>
+                          <Route exact path="/" component={MultisigPage} />
+                          <Route
+                            exact
+                            path="/:address"
+                            component={MultisigInstancePage}
+                          />
+                        </Layout>
+                  </HashRouter>
+                </AccountProvider>
               </WalletDialogProvider>
           </WalletProvider>
         </ConnectionProvider>
