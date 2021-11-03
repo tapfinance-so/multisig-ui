@@ -52,8 +52,8 @@ import {
 import { ViewTransactionOnExplorerButton } from "./Notification";
 import * as idl from "../utils/idl";
 import { useMultisigProgram } from "../hooks/useMultisigProgram";
-import { ASSOCIATED_TOKEN_PROGRAM_ID, Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
-import { MoneyOffOutlined, MoneyOutlined, MoneyRounded } from "@material-ui/icons";
+import { Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
+import { MoneyRounded } from "@material-ui/icons";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
@@ -1538,6 +1538,9 @@ function icon(tx, multisigClient) {
     if (setOwnersSighash.equals(tx.account.data.slice(0, 8))) {
       return <SupervisorAccountIcon />;
     }
+  }
+  if (tx.account.programId.equals(TOKEN_PROGRAM_ID)) {
+    return <MoneyRounded />
   }
   if (idl.IDL_TAG.equals(tx.account.data.slice(0, 8))) {
     return <DescriptionIcon />;
