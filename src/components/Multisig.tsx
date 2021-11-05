@@ -56,7 +56,8 @@ import { MoneyRounded } from "@material-ui/icons";
 import { Connection } from "@solana/web3.js";
 import { getMintInfo, getTokenAccount, parseTokenAccount } from "@project-serum/common";
 import { useMultiSigOwnedTokenAccounts } from "../hooks/useOwnedTokenAccounts";
-import { Select } from "@material-ui/core";
+import { FormControl, InputLabel, MenuItem, Select } from "@material-ui/core";
+import { ACCOUNT_LAYOUT } from "@project-serum/common/dist/lib/token";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
@@ -1430,6 +1431,18 @@ function TransferTokenListItemDetails({
       sourceAddr,
     );
 
+    const destinationAccountInfo = await multisigClient.provider.connection.getAccountInfo(
+      destinationAddr
+    );
+
+    if (destinationAccountInfo === null || destinationAccountInfo.owner.toString() !== TOKEN_PROGRAM_ID.toString() || destinationAccountInfo.data.length !== ACCOUNT_LAYOUT.span) {
+      debugger
+      enqueueSnackbar("Not token account", {
+        variant: "error",
+      });
+      return;
+    }
+
     const destinationTokenAccount = await getTokenAccount(
       multisigClient.provider,
       destinationAddr
@@ -1496,31 +1509,47 @@ function TransferTokenListItemDetails({
     <div
       style={{
         background: "#f1f0f0",
+        paddingTop: "24px",
         paddingLeft: "24px",
         paddingRight: "24px",
       }}
     >
-      <TextField
-        fullWidth
-        style={{ marginTop: "16px" }}
-        label="Source Token Account"
-        value={source}
-        onChange={(e) => setSource(e.target.value as string)}
-      />
-      <TextField
-        style={{ marginTop: "16px" }}
-        fullWidth
-        label="Amount"
-        value={amount}
-        onChange={(e) => setAmount(new u64(e.target.value as string))}
-      />
-      <TextField
-        style={{ marginTop: "16px" }}
-        fullWidth
-        label="Destination Address"
-        value={destination}
-        onChange={(e) => setDestination(e.target.value as string)}
-      />
+      <FormControl fullWidth>
+        <InputLabel id="source-select-label">Source Token Account</InputLabel>
+        <Select
+          autoWidth={true}
+          value={source}
+        >
+          {tokenAccounts.map(
+            tokenAccount => {
+              return (
+                <MenuItem value={tokenAccount.address.toString()} onClick={
+                  () => {
+                    setSource(tokenAccount.address.toString());
+                  }
+                }>
+                  {tokenAccount.address.toString()}
+                </MenuItem>
+              )
+            }
+          )}
+        </Select>
+        <TextField
+          style={{ marginTop: "16px" }}
+          fullWidth
+          label="Amount"
+          value={amount}
+          onChange={(e) => setAmount(new u64(e.target.value as string))}
+        />
+        <TextField
+          style={{ marginTop: "16px" }}
+          fullWidth
+          label="Destination Address"
+          value={destination}
+          onChange={(e) => setDestination(e.target.value as string)}
+        />
+
+      </FormControl>
       <div
         style={{
           display: "flex",
