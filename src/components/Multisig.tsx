@@ -41,7 +41,6 @@ import ListItemIcon from "@material-ui/core/ListItemIcon";
 import ListItem from "@material-ui/core/ListItem";
 import ListItemText from "@material-ui/core/ListItemText";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
-import * as serumCmn from '@project-serum/common';
 import BN from "bn.js";
 import {
   Account,
@@ -52,8 +51,12 @@ import {
 import { ViewTransactionOnExplorerButton } from "./Notification";
 import * as idl from "../utils/idl";
 import { useMultisigProgram } from "../hooks/useMultisigProgram";
-import { Token, TOKEN_PROGRAM_ID, u64 } from "@solana/spl-token";
+import { Token, TOKEN_PROGRAM_ID, u64, AccountInfo as TokenAccount, AccountLayout } from "@solana/spl-token";
 import { MoneyRounded } from "@material-ui/icons";
+import { Connection } from "@solana/web3.js";
+import { getMintInfo, getTokenAccount, parseTokenAccount } from "@project-serum/common";
+import { useMultiSigOwnedTokenAccounts } from "../hooks/useOwnedTokenAccounts";
+import { Select } from "@material-ui/core";
 
 export default function Multisig({ multisig }: { multisig?: PublicKey }) {
   return (
@@ -1406,32 +1409,47 @@ function TransferTokenListItemDetails({
   const [destination, setDestination] = useState<null | string>(null);
   const [amount, setAmount] = useState<null | u64>(null);
 
+
   const multisigClient = useMultisigProgram();
   const { enqueueSnackbar } = useSnackbar();
+
+  const tokenAccounts = useMultiSigOwnedTokenAccounts(multisigClient.provider, multisig, multisigClient.programId)
+
   const createTransactionAccount = async () => {
     enqueueSnackbar("Creating transaction", {
       variant: "info",
     });
     const sourceAddr = new PublicKey(source as string);
+    const destinationAddr = new PublicKey(destination as string);
     const [multisigSigner] = await PublicKey.findProgramAddress(
       [multisig.toBuffer()],
       multisigClient.programId
     );
-    const sourceTokenAccount = await serumCmn.getTokenAccount(
+    const sourceTokenAccount = await getTokenAccount(
       multisigClient.provider,
       sourceAddr,
     );
-    const tokenMint = await serumCmn.getMintInfo(
+
+    const destinationTokenAccount = await getTokenAccount(
       multisigClient.provider,
-      sourceTokenAccount.mint,
+      destinationAddr
     );
-    const destinationAddr = new PublicKey(destination as string);
+
+    if (sourceTokenAccount.mint.toBase58() !== destinationTokenAccount.mint.toBase58()) {
+      enqueueSnackbar("Token mint does not match", {
+        variant: "error",
+      });
+      return;
+    }
+
+    const tokenMint = await getMintInfo(
+      multisigClient.provider, sourceTokenAccount.mint);
 
     if (!amount) {
       enqueueSnackbar("No amount provided", {
         variant: "warning",
       });
-      return
+      return;
     }
     const TEN = new u64(10);
     const multiplier = TEN.pow(new BN(tokenMint.decimals));
@@ -1575,4 +1593,32 @@ function seed(): string {
   return "anchor:idl";
 }
 
-// The 
+export async function getOwnedTokenAccounts(
+  connection: Connection,
+  publicKey: PublicKey,
+): Promise<TokenAccount[]> {
+  const accounts = await connection.getProgramAccounts(
+    TOKEN_PROGRAM_ID,
+    {
+      filters: [
+        {
+          memcmp: {
+            offset: 32,
+            bytes: publicKey.toBase58(),
+          }
+        },
+        {
+          dataSize: AccountLayout.span,
+        }
+      ]
+    }
+  );
+  return (
+    accounts
+      .map(r => {
+        const tokenAccount = parseTokenAccount(r.account.data);
+        tokenAccount.address = r.pubkey;
+        return tokenAccount;
+      })
+  );
+}
