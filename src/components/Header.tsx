@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useHistory } from "react-router-dom";
 import AppBar from "@material-ui/core/AppBar";
 import Toolbar from "@material-ui/core/Toolbar";
@@ -12,12 +12,15 @@ import BubbleChartIcon from "@material-ui/icons/BubbleChart";
 import SearchIcon from "@material-ui/icons/Search";
 import { PublicKey } from "@solana/web3.js";
 import { useAnchorWallet } from "@solana/wallet-adapter-react";
-import DisconnectIcon from '@material-ui/icons/LinkOff';
-import { WalletDisconnectButton, WalletMultiButton } from "@solana/wallet-adapter-material-ui";
+import DisconnectIcon from "@material-ui/icons/LinkOff";
+import {
+  WalletDisconnectButton,
+  WalletMultiButton,
+} from "@solana/wallet-adapter-material-ui";
 import { ENDPOINTS, useConnectionConfig } from "../context/connection";
 
 export default function Header() {
-  const wallet  = useAnchorWallet();
+  const wallet = useAnchorWallet();
   const history = useHistory();
   const [multisigAddress, setMultisigAddress] = useState("");
   const disabled = !isValidPubkey(multisigAddress);
@@ -83,37 +86,16 @@ export default function Header() {
           >
             <NetworkSelector />
             <WalletMultiButton />
-            {wallet && <WalletDisconnectButton startIcon={<DisconnectIcon />} style={{ marginLeft: 8 }} />}
+            {wallet && (
+              <WalletDisconnectButton
+                startIcon={<DisconnectIcon />}
+                style={{ marginLeft: 8 }}
+              />
+            )}
           </div>
         </div>
       </Toolbar>
     </AppBar>
-  );
-}
-
-function SerumLogoButton() {
-  const history = useHistory();
-  return (
-    <div style={{ display: "flex" }} onClick={() => history.push("/")}>
-      <Button color="inherit">
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "center",
-          }}
-        >
-          <img
-            style={{
-              display: "block",
-              height: "35px",
-            }}
-            alt="Logo"
-            src="http://dex.projectserum.com/static/media/logo.49174c73.svg"
-          />
-        </div>
-      </Button>
-    </div>
   );
 }
 
@@ -158,7 +140,7 @@ function BarButton(props: BarButtonProps) {
 
 function NetworkSelector() {
   const [anchorEl, setAnchorEl] = useState(null);
-  const {env, setEndpoint} = useConnectionConfig();
+  const { env, setEndpoint } = useConnectionConfig();
 
   const handleClose = () => {
     setAnchorEl(null);
@@ -197,18 +179,18 @@ function NetworkSelector() {
           color: "white",
         }}
       >
-        {ENDPOINTS.map(endpoint => {
+        {ENDPOINTS.map((endpoint) => {
           return (
             <MenuItem
-            key={endpoint.name.toString()}
-            onClick={() => {
-              handleClose();
-              setEndpoint(endpoint.endpoint);
-            }}
-          >
-            <Typography>{endpoint.name}</Typography>
-          </MenuItem>
-          )
+              key={endpoint.name.toString()}
+              onClick={() => {
+                handleClose();
+                setEndpoint(endpoint.endpoint);
+              }}
+            >
+              <Typography>{endpoint.name}</Typography>
+            </MenuItem>
+          );
         })}
       </Menu>
     </div>
