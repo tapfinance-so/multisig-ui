@@ -1,23 +1,15 @@
 import { useLocalStorageState } from "../utils/utils";
-import {
-  Keypair,
-  clusterApiUrl,
-  Connection,
-} from "@solana/web3.js";
+import { Keypair, clusterApiUrl, Connection } from "@solana/web3.js";
 import React, { useContext, useEffect, useMemo } from "react";
 import { setProgramIds } from "../utils/ids";
 import { ENV as ChainID } from "@solana/spl-token-registry";
 
-export type ENV =
-  | "mainnet-beta"
-  | "testnet"
-  | "devnet"
-  | "localnet";
+export type ENV = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 export const ENDPOINTS = [
   {
     name: "mainnet-beta" as ENV,
-    endpoint: "https://solana-api.projectserum.com/",
+    endpoint: "https://ssc-dao.genesysgo.net/",
     chainID: ChainID.MainnetBeta,
   },
   {
@@ -139,4 +131,3 @@ export function useConnectionConfig() {
     env: context.env,
   };
 }
-
