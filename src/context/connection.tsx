@@ -9,7 +9,7 @@ export type ENV = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 export const ENDPOINTS = [
   {
     name: "mainnet-beta" as ENV,
-    endpoint: "https://ssc-dao.genesysgo.net/",
+    endpoint: "https://rpc1.psyfi.io/fb2f6bf2e85873369a41f4ae277376aa8ea4bb9f",
     chainID: ChainID.MainnetBeta,
   },
   {
