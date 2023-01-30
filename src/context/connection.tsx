@@ -9,7 +9,7 @@ export type ENV = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 export const ENDPOINTS = [
   {
     name: "mainnet-beta" as ENV,
-    endpoint: "https://rpc1.psyfi.io/fb2f6bf2e85873369a41f4ae277376aa8ea4bb9f",
+    endpoint: "https://rpc1.psyfi.io/0c365be8d2d5f50be883ea0afcfb2fb31452e755",
     chainID: ChainID.MainnetBeta,
   },
   {
