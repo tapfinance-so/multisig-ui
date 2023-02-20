@@ -9,7 +9,8 @@ export type ENV = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 export const ENDPOINTS = [
   {
     name: "mainnet-beta" as ENV,
-    endpoint: "https://rpc1.psyfi.io/0c365be8d2d5f50be883ea0afcfb2fb31452e755",
+    endpoint:
+      "https://neat-holy-pallet.solana-mainnet.discover.quiknode.pro/b7f3b928fe2c19c5037fa6e85c560e01239535be/",
     chainID: ChainID.MainnetBeta,
   },
   {
